@@ -97,95 +97,124 @@ let rightAnswers = 0;
 let wrongAnswers = 0;
 let score = 2;
 
-
 function setquestion() {
-  divQuiz.innerHTML = '';  
-
-  let count = document.createElement('p');
-  count.className = "count";
-  count.textContent = `${currentQuestionIndex+1}/${questions.length}`
-  divQuiz.appendChild(count)
-
-  let title = document.createElement('h2');
-  title.textContent = questions[currentQuestionIndex].question;
-  divQuiz.appendChild(title);
-
-  // Отрендерили кнопки ответов
-  for (let i = 0; i < questions[currentQuestionIndex].answers.length; i++) {
-    let button = document.createElement('button');
-    button.textContent = questions[currentQuestionIndex].answers[i];
+    divQuiz.innerHTML = '';
     
-    button.onclick = function() {
-      checkAnswer(i, questions[currentQuestionIndex].index);
-    };
+    // Проверка на случай, если вопросы закончились
+    if (currentQuestionIndex >= questions.length) {
+        endQuiz();
+        return;
+    }
 
-    divQuiz.appendChild(button);
-  }
+    let count = document.createElement('p');
+    count.className = "count";
+    count.textContent = `${currentQuestionIndex + 1}/${questions.length}`;
+    divQuiz.appendChild(count);
 
-  let exitBtn = document.createElement('button');
-  exitBtn.onclick = exitQuizTable; 
-  exitBtn.textContent = 'Выход';
-  exitBtn.className = "exitBtn"; 
-  divQuiz.appendChild(exitBtn); 
-};
+    let title = document.createElement('h2');
+    title.textContent = questions[currentQuestionIndex].question;
+    divQuiz.appendChild(title);
 
-function checkAnswer(selectedIndex, correctIndex) {
-  if (selectedIndex === correctIndex) {
-    rightAnswers++;
-    currentQuestionIndex++;
-    
-    divQuiz.innerHTML = `<h1>Верно!✅</h1>  <h1>${questions[currentQuestionIndex - 1].explanation}</h1><button onclick="setquestion()">Далее</button>`;
+    // Отрендерили кнопки ответов
+    for (let i = 0; i < questions[currentQuestionIndex].answers.length; i++) {
+        let button = document.createElement('button');
+        button.textContent = questions[currentQuestionIndex].answers[i];
+        button.onclick = function() {
+            checkAnswer(i, questions[currentQuestionIndex].index);
+        };
+        divQuiz.appendChild(button);
+    }
 
-} else {
-  currentQuestionIndex++;
-    wrongAnswers++;
-
-  divQuiz.innerHTML = `<h1>Неверно!❌</h1> <h1>Верный ответ: ${questions[currentQuestionIndex - 1].answers[questions[currentQuestionIndex - 1].index]}</h1><h1> ${questions[currentQuestionIndex - 1].explanation}</h1><button onclick="setquestion()">Далее</button>`;
+    let exitBtn = document.createElement('button');
+    exitBtn.onclick = exitQuizTable;
+    exitBtn.textContent = 'Выход';
+    exitBtn.className = "exitBtn";
+    divQuiz.appendChild(exitBtn);
 }
 
-};
+function checkAnswer(selectedIndex, correctIndex) {
+    let currentQuestion = questions[currentQuestionIndex];
+    let isCorrect = selectedIndex === correctIndex;
 
+    if (isCorrect) {
+        rightAnswers++;
+    } else {
+        wrongAnswers++;
+    }
 
+    // Переходим к следующему индексу только ПОСЛЕ сохранения ссылки на текущий вопрос
+    currentQuestionIndex++;
 
-function endQuiz(){
-    currentQuestionIndex = questions.length
-    divQuiz.innerHTML = `<h2>Тест пройден! 🎉</h2>
-    <h2>Ваш результат составил ${rightAnswers}/${questions.length}, вы допустили ${wrongAnswers} ошибок.</h2><h3>Ваша оценка: ${calculateScore()}</h3> <button onclick="startAgain()">Ещё разок?</button>`;
+    // Определяем, какую функцию вызывать на кнопке «Далее»
+    let nextAction = (currentQuestionIndex < questions.length) ? 'setquestion()' : 'endQuiz()';
+
+    if (isCorrect) {
+        divQuiz.innerHTML = `
+            <h1>Верно! ✅</h1>
+            <h1>${currentQuestion.explanation}</h1>
+            <button onclick="${nextAction}">Далее</button>
+        `;
+    } else {
+        divQuiz.innerHTML = `
+            <h1>Неверно! ❌</h1>
+            <h1>Верный ответ: ${currentQuestion.answers[currentQuestion.index]}</h1>
+            <h1>${currentQuestion.explanation}</h1>
+            <button onclick="${nextAction}">Далее</button>
+        `;
+    }
+}
+
+function endQuiz() {
+    // Гарантируем, что индекс равен длине (актуально при досрочном выходе через кнопку)
+    currentQuestionIndex = questions.length; 
+    
+    divQuiz.innerHTML = `
+        <h2>Тест пройден! 🎉</h2>
+        <h2>Ваш результат составил ${rightAnswers}/${questions.length}, вы допустили ${wrongAnswers} ошибок.</h2>
+        <h3>Ваша оценка: ${calculateScore()}</h3>
+        <button onclick="startAgain()">Ещё разок?</button>
+    `;
 }
 
 let calculateScore = () => {
-    let errorPercent =[ (wrongAnswers / questions.length) * 100, (rightAnswers / questions.length) * 100 ];
-    if (errorPercent[0] <=20 && errorPercent[1]>=80) {
-        score = '5 😁'; // 0 ошибок
-    } else if (errorPercent[0] <=40 && errorPercent[1]>=60) {
-        score = '4 🙂'; // От 1 до 2 ошибок (для 5 вопросов)
-    } else if (errorPercent[0] <=50 && errorPercent[1]>=50) {
-        score = '3 😑'; // От 3 до 4 ошибок (для 5 вопросов)
-    } else {
-        score = '2 😞'; // 5 и более ошибок на весь тест
-    }
+    if (questions.length === 0) return '0 😑';
     
+    let successPercent = (rightAnswers / questions.length) * 100;
+
+    if (successPercent >= 80) {
+        score = '5 😁';
+    } else if (successPercent >= 60) {
+        score = '4 🙂';
+    } else if (successPercent >= 50) {
+        score = '3 😑';
+    } else {
+        score = '2 😞';
+    }
     return score;
 };
-function exitQuizTable(){
+
+function exitQuizTable() {
     divQuiz.innerHTML = '<h2>Уже уходите? Может вы хотели бы продолжить викторину?</h2>';
+    
     let btnYes = document.createElement('button');
     btnYes.textContent = 'Да, хочу продолжить.';
     btnYes.onclick = setquestion;
-
+    
     let btnNo = document.createElement('button');
     btnNo.textContent = 'Нет, хочу выйти.';
     btnNo.onclick = endQuiz;
-
+    
     divQuiz.appendChild(btnYes);
     divQuiz.appendChild(btnNo);
 }
-function startAgain(){
- currentQuestionIndex = 0;
- rightAnswers = 0;
- wrongAnswers = 0;
- score = 0;
- setquestion()
+
+function startAgain() {
+    currentQuestionIndex = 0;
+    rightAnswers = 0;
+    wrongAnswers = 0;
+    score = 2;
+    setquestion();
 }
+
 // Запускаем тест
 setquestion();
