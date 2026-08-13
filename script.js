@@ -135,29 +135,12 @@ function checkAnswer(selectedIndex, correctIndex) {
     currentQuestionIndex++;
     
     divQuiz.innerHTML = `<h1>Верно!✅</h1>  <h1>${questions[currentQuestionIndex - 1].explanation}</h1><button onclick="setquestion()">Далее</button>`;
-    
-
-    setTimeout(() => {
-        if (currentQuestionIndex < questions.length) {
-            setquestion();
-        } else {
-            endQuiz();
-        }
-    }, 15000);
 
 } else {
   currentQuestionIndex++;
     wrongAnswers++;
 
   divQuiz.innerHTML = `<h1>Неверно!❌</h1> <h1>Верный ответ: ${questions[currentQuestionIndex - 1].answers[questions[currentQuestionIndex - 1].index]}</h1><h1> ${questions[currentQuestionIndex - 1].explanation}</h1><button onclick="setquestion()">Далее</button>`;
-
-    setTimeout(() => {
-        if (currentQuestionIndex < questions.length) {
-            setquestion();
-        } else {
-            endQuiz();
-        }
-    }, 15000);
 }
 
 };
